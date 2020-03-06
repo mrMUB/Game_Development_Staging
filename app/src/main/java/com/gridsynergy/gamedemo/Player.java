@@ -4,11 +4,14 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.util.Log;
 
 public class Player extends GameObject{
     private Bitmap spritesheet;
     private int score;
+    private int playerSpeed = 6;
     private double dya;
     private double dxa;
     private boolean up;
@@ -16,7 +19,11 @@ public class Player extends GameObject{
     private Animation animation = new Animation();
     private long startTime;
 
+    private boolean collide;
+
     private boolean ctl_UP,ctl_DOWN,ctl_RIGHT,ctl_LEFT;
+
+    String Logs = "Player Logs";
 
     Context context;
 
@@ -31,13 +38,6 @@ public class Player extends GameObject{
         height = h;
         width = w;
 
-//        Bitmap[] image = new Bitmap[numFrames];
-//        spritesheet = res;
-//
-//        for (int i = 0; i < image.length; i++)
-//        {
-//            image[i] = Bitmap.createBitmap(spritesheet, i*width, 0, width, height);
-//        }
 
         initPlayerSprite();
         animation.setFrames(walkRightSprite);
@@ -48,31 +48,77 @@ public class Player extends GameObject{
 
     Bitmap[] walkLeftSprite;
     Bitmap[] walkRightSprite;
+    Bitmap[] walkUpSprite;
+    Bitmap[] walkDownSprite;
     public void initPlayerSprite(){
 
         int numFrames = 4;
         walkRightSprite = new Bitmap[numFrames];
-        Bitmap walkRight = BitmapFactory.decodeResource(context.getResources(), R.drawable.sprite_001);
+        Bitmap walkRight = BitmapFactory.decodeResource(context.getResources(), R.drawable.sprite_p1_right_dir);
+        walkRight = Bitmap.createScaledBitmap(walkRight, 400, 100, false);
         for (int i = 0; i < walkRightSprite.length; i++)
         {
             walkRightSprite[i] = Bitmap.createBitmap(walkRight, i*width, 0, width, height);
         }
 
         walkLeftSprite = new Bitmap[numFrames];
-        Bitmap walkLeft = BitmapFactory.decodeResource(context.getResources(), R.drawable.sprite_002);
+        Bitmap walkLeft = BitmapFactory.decodeResource(context.getResources(), R.drawable.sprite_p1_left_dir_100px);
+        walkLeft = Bitmap.createScaledBitmap(walkLeft, 400, 100, false);
         for (int i = 0; i < walkLeftSprite.length; i++)
         {
             walkLeftSprite[i] = Bitmap.createBitmap(walkLeft, i*width, 0, width, height);
         }
 
+        walkUpSprite = new Bitmap[numFrames];
+        Bitmap walkUp = BitmapFactory.decodeResource(context.getResources(), R.drawable.sprite_p1_up_dir_100px);
+        walkUp = Bitmap.createScaledBitmap(walkUp, 400, 100, false);
+        for (int i = 0; i < walkUpSprite.length; i++)
+        {
+            walkUpSprite[i] = Bitmap.createBitmap(walkUp, i*width, 0, width, height);
+        }
+
+        walkDownSprite = new Bitmap[numFrames];
+        Bitmap walkDown = BitmapFactory.decodeResource(context.getResources(), R.drawable.sprite_p1_down_dir_100px);
+        walkDown = Bitmap.createScaledBitmap(walkDown, 400, 100, false);
+        for (int i = 0; i < walkDownSprite.length; i++)
+        {
+            walkDownSprite[i] = Bitmap.createBitmap(walkDown, i*width, 0, width, height);
+        }
+
     }
 
-    public void setCtl_UP(boolean b){ctl_UP = b; }
-    public void setCtl_DOWN(boolean b){ctl_DOWN = b;}
-    public void setCtl_RIGHT(boolean b){ctl_RIGHT = b;   animation.setFrames(walkLeftSprite);}
-    public void setCtl_LEFT(boolean b){ctl_LEFT = b; animation.setFrames(walkRightSprite);}
+
+    public void setCollide(boolean b){collide = b;}
 
     public void setUp(boolean b){up = b;}
+
+    private int playerAction = 0;
+    public void setPlayerAction(int action){
+
+
+        // change player sprite
+        if(playerAction != action){
+
+            Log.i(Logs, "Player action changed to: "+ action);
+            switch (action){
+                case 1:
+                    animation.setFrames(walkUpSprite);
+                    break;
+                case 2:
+                    animation.setFrames(walkDownSprite);
+                    break;
+                case 3:
+                    animation.setFrames(walkLeftSprite);
+                    break;
+                case 4:
+                    animation.setFrames(walkRightSprite);
+                    break;
+            }
+        }
+
+
+        playerAction = action;
+    }
 
     public void update()
     {
@@ -84,46 +130,73 @@ public class Player extends GameObject{
         }
         animation.update();
 
-        if(ctl_UP){
-            dy = -5;
+
+
+        switch (playerAction){
+            case 1:
+                dy = -playerSpeed;
+                break;
+            case 2:
+                dy = playerSpeed;
+                break;
+            case 3:
+                dx = -playerSpeed;
+                break;
+            case 4:
+                dx = playerSpeed;
+                break;
         }
 
-        if(ctl_DOWN){
-            dy = 5;
+
+        if(collide){
+
+            switch (playerAction){
+                case 1:
+                    y += 10;
+                    break;
+                case 2:
+                    y -= 10;
+                    break;
+                case 3:
+                    x += 10;
+                    break;
+                case 4:
+                    x -= 10;
+                    break;
+            }
+
+            collide = false;
+            playerAction = 0;
+        }else{
+            y += dy*2;
+            x += dx*2;
+
+            if(y < 24){
+                y = 24;
+            }
+
+            if(y > MainActivity.HEIGHT){
+                y = MainActivity.HEIGHT;
+            }
         }
 
-        if(ctl_LEFT){
-            dx = -5;
-        }
-
-        if(ctl_RIGHT){
-            dx = 5;
-        }
-
-        y += dy*2;
-        x += dx*2;
-
-        if(y < 24){
-            y = 24;
-        }
-
-        if(y > MainActivity.HEIGHT){
-            y = MainActivity.HEIGHT;
-        }
 
         dy = 0;
+        dx = 0;
 
-        Log.i("PlayerPosition","Y: "+y);
+        Log.i("PlayerPosition","Y:"+y+" X:"+x);
 
     }
 
     public void draw(Canvas canvas)
     {
         canvas.drawBitmap(animation.getImage(),x,y,null);
+
     }
     public int getScore(){return score;}
     public boolean getPlaying(){return playing;}
     public void setPlaying(boolean b){playing = b;}
     public void resetDYA(){dya = 0;}
     public void resetScore(){score = 0;}
+
 }

@@ -5,7 +5,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.Activity;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -16,6 +19,8 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+
+import java.util.ArrayList;
 
 public class MainActivity extends Activity {
 
@@ -40,7 +45,11 @@ public class MainActivity extends Activity {
     private MainThread thread;
     private Background bg;
     private Player player;
+    private Wall wall;
 
+    private ArrayList<Wall> MapObjects;
+
+    Paint gamePaint;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,9 +64,14 @@ public class MainActivity extends Activity {
         DisplayMetrics dm = getResources().getDisplayMetrics();
         WIDTH = dm.widthPixels;
         HEIGHT = dm.heightPixels;
-
+        Log.i("GPanel Size: ",WIDTH +"x"+HEIGHT);
         initSurface();
         controller();
+
+        gamePaint = new Paint();
+        gamePaint.setColor(Color.rgb(255, 0, 0));
+        gamePaint.setStrokeWidth(1);
+        gamePaint.setStyle(Paint.Style.STROKE);
     }
 
     public void controller(){
@@ -67,8 +81,13 @@ public class MainActivity extends Activity {
             @Override
             public boolean onTouch(View arg0, MotionEvent arg1) {
                 if (arg1.getAction()==MotionEvent.ACTION_DOWN){
-                    player.setCtl_UP(true);
-                    player.setCtl_DOWN(false);
+//                    player.setCtl_UP(false);
+//                    player.setCtl_DOWN(false);
+//                    player.setCtl_RIGHT(false);
+//                    player.setCtl_LEFT(false);
+//
+//                    player.setCtl_UP(true);
+                    player.setPlayerAction(1);
                 }
                 return true;
             }
@@ -79,8 +98,15 @@ public class MainActivity extends Activity {
             @Override
             public boolean onTouch(View arg0, MotionEvent arg1) {
                 if (arg1.getAction()==MotionEvent.ACTION_DOWN){
-                    player.setCtl_DOWN(true);
-                    player.setCtl_UP(false);
+
+//                    player.setCtl_UP(false);
+//                    player.setCtl_DOWN(false);
+//                    player.setCtl_RIGHT(false);
+//                    player.setCtl_LEFT(false);
+//
+//                    player.setCtl_DOWN(true);
+
+                    player.setPlayerAction(2);
                 }
                 return true;
             }
@@ -91,8 +117,13 @@ public class MainActivity extends Activity {
             @Override
             public boolean onTouch(View arg0, MotionEvent arg1) {
                 if (arg1.getAction()==MotionEvent.ACTION_DOWN){
-                    player.setCtl_LEFT(true);
-                    player.setCtl_RIGHT(false);
+//                    player.setCtl_UP(false);
+//                    player.setCtl_DOWN(false);
+//                    player.setCtl_RIGHT(false);
+//                    player.setCtl_LEFT(false);
+//
+//                    player.setCtl_LEFT(true);
+                    player.setPlayerAction(3);
                 }
                 return true;
             }
@@ -103,8 +134,14 @@ public class MainActivity extends Activity {
             @Override
             public boolean onTouch(View arg0, MotionEvent arg1) {
                 if (arg1.getAction()==MotionEvent.ACTION_DOWN){
-                    player.setCtl_RIGHT(true);
-                    player.setCtl_LEFT(false);
+
+//                    player.setCtl_UP(false);
+//                    player.setCtl_DOWN(false);
+//                    player.setCtl_RIGHT(false);
+//                    player.setCtl_LEFT(false);
+//
+//                    player.setCtl_RIGHT(true);
+                    player.setPlayerAction(4);
                 }
                 return true;
             }
@@ -115,7 +152,6 @@ public class MainActivity extends Activity {
 
     public void initSurface(){
         mSurfaceView = findViewById(R.id.GameSurfaceView);
-      //  mSurfaceView.setZOrderOnTop(true);
         mSurfaceView.getHolder().setFormat(PixelFormat.TRANSPARENT);
         mSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
 
@@ -145,9 +181,21 @@ public class MainActivity extends Activity {
 
 
 
-        bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.grassbg1));
-//        player = new Player(BitmapFactory.decodeResource(getResources(), R.drawable.sprite_001), 125, 120, 4);
-        player = new Player(this, 125, 120, 4);
+        bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.game_background_v1_4));
+
+        player = new Player(this, 100, 100, 4);
+
+//        walls = new ArrayList<Wall>();
+//
+//        int[][] wallSet = new Wall().getLvlWalls();
+//
+//        for (int i = 0; i < wallSet.length; ++i) {
+//            walls.add(new Wall(BitmapFactory.decodeResource(getResources(), R.drawable.wall),wallSet[i][0],+wallSet[i][1],100,100));
+//        }
+
+
+        MapObjects = new Maps(this).getMap(1);
+
         //we can safely start the game loop
         thread = new MainThread(mSurfaceView.getHolder(), this);
         thread.setRunning(true);
@@ -182,19 +230,49 @@ public class MainActivity extends Activity {
         if(player.getPlaying()) {
             bg.update();
             player.update();
+
+            for(Wall wall: MapObjects)
+            {
+                if(isColliding(wall,player)){
+                    player.setCollide(true);
+                }
+            }
+
+
+
         }
+    }
+
+    public void ShowCollisionBorder(Canvas canvas){
+        canvas.drawRect(player.getRectangle(),gamePaint);
+        canvas.drawRect(wall.getRectangle(),gamePaint);
+    }
+
+
+    public boolean isColliding(GameObject a,GameObject b){
+
+        if(Rect.intersects(a.getRectangle(),b.getRectangle())) return true;
+        else return false;
+
     }
 
     public void draw(Canvas canvas) {
 
-        final float scaleFactorX = WIDTH/(WIDTH*1f);
-        final float scaleFactorY = HEIGHT/(HEIGHT*1.1f);
+//        final float scaleFactorX = WIDTH/(WIDTH*1f);
+//        final float scaleFactorY = HEIGHT/(HEIGHT*1.1f);
 
         if (canvas != null) {
             final int savedState = canvas.save();
-            canvas.scale(scaleFactorX, scaleFactorY);
+//            canvas.scale(scaleFactorX, scaleFactorY);
             bg.draw(canvas);
             player.draw(canvas);
+
+            for(Wall wall: MapObjects)
+            {
+                wall.draw(canvas);
+            }
+
+            ShowCollisionBorder(canvas);
             canvas.restoreToCount(savedState);
         }
     }

@@ -18,6 +18,7 @@ public class Background {
     }
     public void draw(Canvas canvas)
     {
+        image = Bitmap.createScaledBitmap(image, 1920, 1080, false);
         canvas.drawBitmap(image, x, y,null);
     }
     public void setVector(int dx)

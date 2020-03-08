@@ -55,7 +55,7 @@ public class Player extends GameObject{
         int numFrames = 4;
         walkRightSprite = new Bitmap[numFrames];
         Bitmap walkRight = BitmapFactory.decodeResource(context.getResources(), R.drawable.sprite_p1_right_dir);
-        walkRight = Bitmap.createScaledBitmap(walkRight, 400, 100, false);
+        walkRight = Bitmap.createScaledBitmap(walkRight, 200, 50, false);
         for (int i = 0; i < walkRightSprite.length; i++)
         {
             walkRightSprite[i] = Bitmap.createBitmap(walkRight, i*width, 0, width, height);
@@ -63,7 +63,7 @@ public class Player extends GameObject{
 
         walkLeftSprite = new Bitmap[numFrames];
         Bitmap walkLeft = BitmapFactory.decodeResource(context.getResources(), R.drawable.sprite_p1_left_dir_100px);
-        walkLeft = Bitmap.createScaledBitmap(walkLeft, 400, 100, false);
+        walkLeft = Bitmap.createScaledBitmap(walkLeft, 200, 50, false);
         for (int i = 0; i < walkLeftSprite.length; i++)
         {
             walkLeftSprite[i] = Bitmap.createBitmap(walkLeft, i*width, 0, width, height);
@@ -71,7 +71,7 @@ public class Player extends GameObject{
 
         walkUpSprite = new Bitmap[numFrames];
         Bitmap walkUp = BitmapFactory.decodeResource(context.getResources(), R.drawable.sprite_p1_up_dir_100px);
-        walkUp = Bitmap.createScaledBitmap(walkUp, 400, 100, false);
+        walkUp = Bitmap.createScaledBitmap(walkUp, 200, 50, false);
         for (int i = 0; i < walkUpSprite.length; i++)
         {
             walkUpSprite[i] = Bitmap.createBitmap(walkUp, i*width, 0, width, height);
@@ -79,7 +79,7 @@ public class Player extends GameObject{
 
         walkDownSprite = new Bitmap[numFrames];
         Bitmap walkDown = BitmapFactory.decodeResource(context.getResources(), R.drawable.sprite_p1_down_dir_100px);
-        walkDown = Bitmap.createScaledBitmap(walkDown, 400, 100, false);
+        walkDown = Bitmap.createScaledBitmap(walkDown, 200, 50, false);
         for (int i = 0; i < walkDownSprite.length; i++)
         {
             walkDownSprite[i] = Bitmap.createBitmap(walkDown, i*width, 0, width, height);
@@ -93,6 +93,7 @@ public class Player extends GameObject{
     public void setUp(boolean b){up = b;}
 
     private int playerAction = 0;
+    private int collideDirection = 0;
     public void setPlayerAction(int action){
 
 
@@ -149,34 +150,34 @@ public class Player extends GameObject{
 
 
         if(collide){
-
-            switch (playerAction){
+            if(collideDirection == 0) collideDirection = playerAction;
+            switch (collideDirection){
                 case 1:
-                    y += 10;
+                    y += 1;
                     break;
                 case 2:
-                    y -= 10;
+                    y -= 1;
                     break;
                 case 3:
-                    x += 10;
+                    x += 1;
                     break;
                 case 4:
-                    x -= 10;
+                    x -= 1;
                     break;
             }
-
-            collide = false;
             playerAction = 0;
         }else{
-            y += dy*2;
-            x += dx*2;
+            collideDirection = 0;
+
+            y += dy;
+            x += dx;
 
             if(y < 24){
                 y = 24;
             }
 
-            if(y > MainActivity.HEIGHT){
-                y = MainActivity.HEIGHT;
+            if(y > MainActivity.HEIGHT-100){
+                y = MainActivity.HEIGHT-100;
             }
         }
 

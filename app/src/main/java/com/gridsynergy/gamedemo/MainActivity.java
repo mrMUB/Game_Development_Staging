@@ -6,9 +6,13 @@ import android.app.Activity;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.Region;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -46,10 +50,13 @@ public class MainActivity extends Activity {
     private Background bg;
     private Player player;
     private Wall wall;
+    private Obstacles obstacles;
 
     private ArrayList<Wall> MapObjects;
 
     Paint gamePaint;
+
+    private ArrayList<Region> ObstaclesBorder = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -181,9 +188,9 @@ public class MainActivity extends Activity {
 
 
 
-        bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.game_background_v1_4));
+        bg = new Background(BitmapFactory.decodeResource(getResources(), R.drawable.bg_demo_tiles_3));
 
-        player = new Player(this, 100, 100, 4);
+        player = new Player(this, 50, 50, 4);
 
 //        walls = new ArrayList<Wall>();
 //
@@ -193,6 +200,8 @@ public class MainActivity extends Activity {
 //            walls.add(new Wall(BitmapFactory.decodeResource(getResources(), R.drawable.wall),wallSet[i][0],+wallSet[i][1],100,100));
 //        }
 
+        obstacles = new Obstacles();
+        ObstaclesBorder = obstacles.getObstacle(1);
 
         MapObjects = new Maps(this).getMap(1);
 
@@ -231,12 +240,19 @@ public class MainActivity extends Activity {
             bg.update();
             player.update();
 
-            for(Wall wall: MapObjects)
-            {
-                if(isColliding(wall,player)){
-                    player.setCollide(true);
-                }
+
+            if(obstacles.collidedObstacle(player)){
+                player.setCollide(true);
+            }else{
+                player.setCollide(false);
             }
+
+//            for(Wall wall: MapObjects)
+//            {
+//                if(isColliding(wall,player)){
+//                    player.setCollide(true);
+//                }
+//            }
 
 
 
@@ -266,14 +282,66 @@ public class MainActivity extends Activity {
 //            canvas.scale(scaleFactorX, scaleFactorY);
             bg.draw(canvas);
             player.draw(canvas);
+            obstacles.draw(canvas,gamePaint);
 
-            for(Wall wall: MapObjects)
-            {
-                wall.draw(canvas);
-            }
+//            for(Wall wall: MapObjects)
+//            {
+//                wall.draw(canvas);
+//            }
+
+//            DrawVectorPath(canvas);
 
             ShowCollisionBorder(canvas);
             canvas.restoreToCount(savedState);
         }
+    }
+
+    public void DrawVectorPath(Canvas canvas){
+        Path vectorPath = new Path();
+        vectorPath.moveTo(6.5f, 79.99f);
+        vectorPath.lineTo(37.21f, 50.5f);
+        vectorPath.lineTo(6.5f, 19.79f);
+        vectorPath.lineTo(18.79f, 7.5f);
+        vectorPath.lineTo(49.5f, 38.21f);
+        vectorPath.lineTo(80.21f, 7.5f);
+        vectorPath.lineTo(92.5f, 19.79f);
+        vectorPath.lineTo(61.79f, 50.5f);
+        vectorPath.lineTo(92.5f, 79.99f);
+        vectorPath.lineTo(80.21f, 93.5f);
+        vectorPath.lineTo(49.5f, 62.79f);
+        vectorPath.lineTo(18.79f, 93.5f);
+        vectorPath.close();
+
+        int width = 300;
+        int height = 300;
+
+// Calculate a transformation scale between [0, 0, 100, 100] and [0, 0, width, height].
+        float scaleX = width / 100.0f;
+        float scaleY = height / 100.0f;
+
+// Create the transformation matrix.
+        final Matrix drawMatrix = new Matrix();
+        drawMatrix.setScale(scaleX, scaleY);
+
+// Now transform the vector path.
+        vectorPath.transform(drawMatrix);
+
+        canvas.drawPath(vectorPath, gamePaint);
+
+
+        Region clip = new Region(0, 0, 1920, 1080);
+        Region region1 = new Region();
+        region1.setPath(vectorPath, clip);
+
+
+        Region region2 = player.getRegion();
+
+        if (!region1.quickReject(region2) && region1.op(region2, Region.Op.INTERSECT)) {
+            // Collision!
+            Log.i("Collision","true");
+        }
+
+
+
     }
 }
